@@ -1091,4 +1091,11 @@ public class ImageTargets extends Activity implements SampleAppMenuInterface
     {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
+    
+    public void setVideoSize(int width, int height) {
+    	if (mRenderer != null) {
+    		mRenderer.setVideoSize(width, height);
+    	}
+    }
+
 }

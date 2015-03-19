@@ -12,6 +12,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
 import android.content.res.Configuration;
+import android.util.DisplayMetrics;
 
 import com.qualcomm.QCAR.QCAR;
 
@@ -182,5 +183,27 @@ public class ImageTargetsRenderer implements GLSurfaceView.Renderer
 			cam.setYFOV(fovy);
 		}
     }
-
+    
+	public void setVideoSize(int videoWidth, int videoHeight) {
+		
+		DisplayMetrics displaymetrics = new DisplayMetrics();
+		mActivity.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+		int height = displaymetrics.heightPixels;
+		int width = displaymetrics.widthPixels;
+		
+		int widestVideo = videoWidth > videoHeight? videoWidth: videoHeight;
+		int widestScreen = width > height? width: height;
+		
+		float diff = (widestVideo - widestScreen) / 2;
+		
+		Config.viewportOffsetY = diff / widestScreen;
+	}
+	
+	public void setFov(float fov) {
+		this.fov = fov;
+	}
+	
+	public void setFovy(float fovy) {
+		this.fovy = fovy;
+	}
 }

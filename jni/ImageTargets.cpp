@@ -473,7 +473,7 @@ Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargetsRenderer_renderFrame(JNIE
     QCAR::Renderer::getInstance().end();
 }
 
-
+/*
 void
 configureVideoBackground()
 {
@@ -526,7 +526,64 @@ configureVideoBackground()
     // Set the config:
     QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);
 }
+*/
 
+void
+configureVideoBackground(JNIEnv* env, jobject obj)
+{
+    // Get the default video mode:
+    QCAR::CameraDevice& cameraDevice = QCAR::CameraDevice::getInstance();
+    QCAR::VideoMode videoMode = cameraDevice.
+                                getVideoMode(QCAR::CameraDevice::MODE_DEFAULT);
+
+
+    // Configure the video background
+    QCAR::VideoBackgroundConfig config;
+    config.mEnabled = true;
+    config.mSynchronous = true;
+    config.mPosition.data[0] = 0.0f;
+    config.mPosition.data[1] = 0.0f;
+
+    if (isActivityInPortraitMode)
+    {
+        //LOG("configureVideoBackground PORTRAIT");
+        config.mSize.data[0] = videoMode.mHeight
+                                * (screenHeight / (float)videoMode.mWidth);
+        config.mSize.data[1] = screenHeight;
+
+        if(config.mSize.data[0] < screenWidth)
+        {
+            LOG("Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
+            config.mSize.data[0] = screenWidth;
+            config.mSize.data[1] = screenWidth *
+                              (videoMode.mWidth / (float)videoMode.mHeight);
+        }
+    }
+    else
+    {
+        //LOG("configureVideoBackground LANDSCAPE");
+        config.mSize.data[0] = screenWidth;
+        config.mSize.data[1] = videoMode.mHeight
+                            * (screenWidth / (float)videoMode.mWidth);
+
+        if(config.mSize.data[1] < screenHeight)
+        {
+            LOG("Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
+            config.mSize.data[0] = screenHeight
+                                * (videoMode.mWidth / (float)videoMode.mHeight);
+            config.mSize.data[1] = screenHeight;
+        }
+    }
+
+    jclass activityClass = env->GetObjectClass(obj);
+	jmethodID videoMethod = env->GetMethodID(activityClass, "setVideoSize", "(II)V");
+	env->CallVoidMethod(obj, videoMethod, config.mSize.data[0], config.mSize.data[1]);
+
+    LOG("Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)", videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight, config.mSize.data[0], config.mSize.data[1]);
+
+    // Set the config:
+    QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);
+}
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargets_initApplicationNative(
@@ -610,8 +667,8 @@ Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargets_deinitApplicationNative(
 
 
 JNIEXPORT void JNICALL
-Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargets_startCamera(JNIEnv *,
-                                                                         jobject, jint camera)
+Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargets_startCamera(JNIEnv *env,
+                                                                         jobject obj, jint camera)
 {
     LOG("Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargets_startCamera");
     
@@ -622,7 +679,7 @@ Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargets_startCamera(JNIEnv *,
         return;
 
     // Configure the video background
-    configureVideoBackground();
+    configureVideoBackground(env, obj);
 
     // Select the default mode:
     if (!QCAR::CameraDevice::getInstance().selectVideoMode(
@@ -819,7 +876,7 @@ Java_com_qualcomm_QCARSamples_ImageTargets_ImageTargetsRenderer_updateRendering(
     screenHeight = height;
 
     // Reconfigure the video background
-    configureVideoBackground();
+    configureVideoBackground(env, obj);
 
     //set fov
     jclass activityClass = env->GetObjectClass(obj); //We get the class of out activity
