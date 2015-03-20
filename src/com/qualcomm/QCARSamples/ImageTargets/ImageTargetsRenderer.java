@@ -28,8 +28,10 @@ import com.threed.jpct.TextureManager;
 import com.threed.jpct.World;
 import com.threed.jpct.util.BitmapHelper;
 import com.threed.jpct.util.MemoryHelper;
+import com.threed.jpct.Loader;
+import com.threed.jpct.Matrix;
 
-
+import java.io.InputStream;
 
 /** The renderer class for the ImageTargets sample. */
 public class ImageTargetsRenderer implements GLSurfaceView.Renderer
@@ -71,7 +73,8 @@ public class ImageTargetsRenderer implements GLSurfaceView.Renderer
 			fb.dispose();
 		}
 		fb = new FrameBuffer(width, height);
-		Config.viewportOffsetAffectsRenderTarget=true;        
+		Config.viewportOffsetAffectsRenderTarget=true;   
+		Config.viewportOffsetY = (float)0.12;
         
         // Call native function to update rendering when render surface
         // parameters have changed:
@@ -118,6 +121,7 @@ public class ImageTargetsRenderer implements GLSurfaceView.Renderer
 	private float fov;
 	private float fovy;
     
+	//Initializing jPTC
     public void initJPCT() 
     {
 		world = new World();
@@ -206,4 +210,21 @@ public class ImageTargetsRenderer implements GLSurfaceView.Renderer
 	public void setFovy(float fovy) {
 		this.fovy = fovy;
 	}
+
+    private Object3D loadModel(InputStream is, float scale) {
+        Object3D[] model = Loader.load3DS(is, scale);
+        Object3D o3d = new Object3D(0);
+        Object3D temp = null;
+        for (int i = 0; i < model.length; i++) {
+            temp = model[i];
+            temp.setCenter(SimpleVector.ORIGIN);
+            temp.rotateX((float)( -.5*Math.PI));
+            temp.rotateMesh();
+            temp.setRotationMatrix(new Matrix());
+            o3d = Object3D.mergeObjects(o3d, temp);
+            o3d.build();
+        }
+        
+        return o3d;
+    }
 }
